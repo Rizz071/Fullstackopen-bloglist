@@ -44,9 +44,39 @@ const mostBlogs = (blogs) => {
     return result.find(author => author.blogs === maxValue)
 }
 
+const mostLikes = (blogs) => {
+    const foundedAuthors = blogs.map(blog => blog.author)
+
+    const filteredAuthors = []
+    foundedAuthors.forEach(author => {
+        if (!filteredAuthors.includes(author)) filteredAuthors.push(author)
+    });
+
+    result = []
+    filteredAuthors.forEach(filteredAuthor => {
+        let i = 0;
+        blogs.forEach(blogAuthor => {
+            if (filteredAuthor === blogAuthor.author) i = i + blogAuthor.likes
+        })
+
+        const obj = {}
+        obj.author = filteredAuthor
+        obj.likes = i
+
+        result.push(obj)
+    })
+
+    let maxValue = result.reduce((acc, value) => {
+        return (acc = acc > value.likes ? acc : value.likes);
+    }, 0);
+
+    return result.find(author => author.likes === maxValue)
+}
+
 module.exports = {
     dummy,
     totalLikes,
     favoriteBlog,
-    mostBlogs
+    mostBlogs,
+    mostLikes
 }
