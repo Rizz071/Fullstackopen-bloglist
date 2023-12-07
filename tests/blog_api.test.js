@@ -15,8 +15,7 @@ describe('tests for blogs', () => {
 
     test('blogs are returned in right amount', async () => {
         const inputBlogs = await api.get('/api/blogs')
-        console.log('output test blog list:', inputBlogs)
-        expect(inputBlogs.lenght === 10)
+        expect(inputBlogs.body).toHaveLength(2)
     })
 
     afterAll(async () => {
