@@ -68,7 +68,7 @@ describe('tests for blogs', () => {
             .expect(201)
 
         const new_Blogs_list = await api.get('/api/blogs')
-
+        console.log(new_Blogs_list.body)
         expect(new_Blogs_list.body).toHaveLength(old_Blogs_list.body.length + 1)
     })
 
