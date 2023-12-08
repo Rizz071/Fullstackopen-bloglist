@@ -24,16 +24,16 @@ const initialBlogs = [
 ]
 
 beforeEach(async () => {
-    console.log('Deleting all dummy entities...')
+    // console.log('Deleting all dummy blog entities...')
     await Blog.deleteMany({})
-    console.log('...deleted')
+    // console.log('...deleted')
 
-    console.log('Creating dummy entities...')
+    // console.log('Creating dummy blog entities...')
     for (let dummyBlog of initialBlogs) {
         let blogObject = new Blog(dummyBlog)
         await blogObject.save()
     }
-    console.log('...created')
+    // console.log('...created')
 })
 
 
