@@ -60,6 +60,24 @@ describe('tests for users', () => {
             console.log(new_Users_list.body)
             expect(new_Users_list.body).toHaveLength(old_Users_list.body.length + 1)
         })
+
+        test('test for too short username', async () => {
+
+            const old_Users_list = await api.get('/api/users')
+
+            await api
+                .post('/api/users')
+                .send({
+                    "username": "te",
+                    "name": "Esi Merkki",
+                    "password": "salasana3"
+                })
+                .expect(400)
+
+            const new_Users_list = await api.get('/api/users')
+            console.log(new_Users_list.body)
+            expect(new_Users_list.body).toHaveLength(old_Users_list.body.length + 1)
+        })
     })
 
 })
