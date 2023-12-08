@@ -72,6 +72,28 @@ describe('tests for blogs', () => {
         expect(new_Blogs_list.body).toHaveLength(old_Blogs_list.body.length + 1)
     })
 
+
+    test('if the likes property is missing from the request, it will default to the value 0', async () => {
+        await api
+            .post('/api/blogs')
+            .send({
+                title: "test for post request 4",
+                author: "test for likes value",
+                url: "http://post.com",
+                // likes: 3,
+            })
+            .expect(201)
+
+        const blogList = await api.get('/api/blogs')
+        console.log(blogList.body)
+
+        blogList.body.forEach(blog => {
+            expect(blog.likes).toBeDefined()
+        })
+
+    })
+
+
     afterAll(async () => {
         await mongoose.connection.close()
         console.log('Connection to MongoDB closed')
