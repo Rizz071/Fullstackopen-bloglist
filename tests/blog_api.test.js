@@ -131,6 +131,31 @@ describe('tests for blogs', () => {
         })
     })
 
+
+    test('If entity was updated properly?', async () => {
+        const old_blogList = await api.get('/api/blogs')
+        // console.log('first dummy in list blog before updating', old_blogList.body[0])
+
+        //trying to update first dummy blog in list. Likes property is different
+        const updatedBlog = {
+            title: 'test for post request 0',
+            author: 'John Post',
+            url: 'http://post.com',
+            likes: 100,
+            id: old_blogList.body[0].id,
+        }
+
+        await api
+            .put(`/api/blogs/${old_blogList.body[0].id}`)
+            .send(updatedBlog)
+            .expect(200)
+
+        const new_blogList = await api.get('/api/blogs')
+        // console.log('dummy blog after updating', new_blogList.body[0])
+
+        expect(new_blogList.body[0]).toEqual(updatedBlog)
+    })
+
     afterAll(async () => {
         await mongoose.connection.close()
         console.log('Connection to MongoDB closed')

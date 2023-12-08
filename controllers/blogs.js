@@ -28,4 +28,15 @@ blogsRouter.delete('/:id', async (request, response) => {
     console.log(`Entity with id ${request.params.id} was deleted`)
 })
 
+blogsRouter.put('/:id', async (request, response) => {
+    if (!request.body.likes) request.body.likes = 0
+    if (!request.body.title) response.status(400).end()
+    if (!request.body.url) response.status(400).end()
+
+    const blog = new Blog(request.body)
+
+    const result = await Blog.findByIdAndUpdate(request.params.id, blog, { new: true })
+    response.status(200).json(result)
+})
+
 module.exports = blogsRouter
