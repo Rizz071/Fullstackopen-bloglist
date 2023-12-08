@@ -116,13 +116,20 @@ describe('tests for blogs', () => {
 
         const blogList = await api.get('/api/blogs')
         console.log(blogList.body)
-
-        // blogList.body.forEach(blog => {
-        //     expect(blog.likes).toBeDefined()
-        // })
-
     })
 
+    test('If entity was delete properly?', async () => {
+        const old_blogList = await api.get('/api/blogs')
+        // console.log('blogs before deletion', old_blogList.body)
+
+        await api.del(`/api/blogs/${old_blogList.body[0].id}`)
+
+        const new_blogList = await api.get('/api/blogs')
+        // console.log('blogs after deletion', new_blogList.body)
+        new_blogList.body.forEach(blog => {
+            expect(blog.id).not.toBe(old_blogList.body[0].id)
+        })
+    })
 
     afterAll(async () => {
         await mongoose.connection.close()
