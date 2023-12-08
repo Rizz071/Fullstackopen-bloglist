@@ -73,7 +73,7 @@ describe('tests for blogs', () => {
     })
 
 
-    test('if the likes property is missing from the request, it will default to the value 0', async () => {
+    test('If the likes property is missing from the request, it will default to the value 0', async () => {
         await api
             .post('/api/blogs')
             .send({
@@ -90,6 +90,36 @@ describe('tests for blogs', () => {
         blogList.body.forEach(blog => {
             expect(blog.likes).toBeDefined()
         })
+
+    })
+
+    test('If the title or url properties are missing from the request data, the backend responds to the request with the status code 400 Bad Request', async () => {
+        await api
+            .post('/api/blogs')
+            .send({
+                // title: "test for post request 5",
+                author: "test title",
+                url: "http://post.com",
+                likes: 3,
+            })
+            .expect(400)
+
+        await api
+            .post('/api/blogs')
+            .send({
+                title: "test for post request 5",
+                author: "test url",
+                // url: "http://post.com",
+                likes: 3,
+            })
+            .expect(400)
+
+        const blogList = await api.get('/api/blogs')
+        console.log(blogList.body)
+
+        // blogList.body.forEach(blog => {
+        //     expect(blog.likes).toBeDefined()
+        // })
 
     })
 
