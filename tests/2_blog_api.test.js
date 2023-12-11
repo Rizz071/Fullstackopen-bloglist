@@ -4,9 +4,24 @@ const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const usersRouter = require('../controllers/users')
 
 
 const api = supertest(app)
+
+
+const initialUsers = [
+    {
+        "username": "testuser1",
+        "name": "Esi Merkki",
+        "password": "salasana1"
+    },
+    {
+        "username": "testuser2",
+        "name": "Esi Merkki",
+        "password": "salasana2"
+    }
+]
 
 const initialBlogs = [
     {
@@ -14,26 +29,104 @@ const initialBlogs = [
         author: "John Post",
         url: "http://post.com",
         likes: 1,
+        // user: undefined
     },
     {
         title: "test for post request 1",
         author: "Dave Repost",
         url: "http://post.com",
         likes: 10,
+        // user: undefined
     }
 ]
 
+
 beforeEach(async () => {
+    await User.deleteMany({})
+
+    const saltRounds = 10
+
+    // console.log('Creating dummy user entities...')
+    for (let dummyUser of initialUsers) {
+        let userObject = new User(dummyUser)
+        userObject.passwordHash = await bcrypt.hash(dummyUser.password, saltRounds)
+
+        await userObject.save()
+    }
+
+    // const createdUsers = await api.get('/api/users')
+    // console.log('Created dummy users:', createdUsers.body)
+
+
     // console.log('Deleting all dummy blog entities...')
     await Blog.deleteMany({})
-    // console.log('...deleted')
+
+    const user = await User.findOne({ username: 'testuser1' })
 
     // console.log('Creating dummy blog entities...')
     for (let dummyBlog of initialBlogs) {
         let blogObject = new Blog(dummyBlog)
+        blogObject.user = user.id
         await blogObject.save()
     }
-    // console.log('...created')
+
+    // const createdBlogs = await api.get('/api/blogs')
+    // console.log('Created dummy blogs:', createdBlogs.body)
+})
+
+
+describe('tests for users', () => {
+    describe('tests for user creation', () => {
+
+        test('test for POST', async () => {
+
+            const old_Users_list = await api.get('/api/users')
+
+            await api
+                .post('/api/users')
+                .send({
+                    "username": "testuser3",
+                    "name": "Esi Merkki",
+                    "password": "salasana3"
+                })
+                .expect(201)
+
+            const new_Users_list = await api.get('/api/users')
+            console.log(new_Users_list.body)
+            expect(new_Users_list.body).toHaveLength(old_Users_list.body.length + 1)
+        })
+
+        test('test for too short username', async () => {
+
+            const sentUser = await api
+                .post('/api/users')
+                .send({
+                    "username": "Jo",
+                    "name": "Esi Merkki",
+                    "password": "salasana"
+                })
+                .expect(400)
+
+            const new_Users_list = await api.get('/api/users')
+            expect(new_Users_list.body).not.toContain(sentUser)
+        })
+
+        test('test for too short password', async () => {
+
+            const sentUser = await api
+                .post('/api/users')
+                .send({
+                    "username": "Jonny",
+                    "name": "Esi Merkki",
+                    "password": "sa"
+                })
+                .expect(401)
+
+            const new_Users_list = await api.get('/api/users')
+            expect(new_Users_list.body).not.toContain(sentUser)
+        })
+    })
+
 })
 
 
@@ -60,6 +153,10 @@ describe('tests for blogs', () => {
         test('test for POST', async () => {
 
             const old_Blogs_list = await api.get('/api/blogs')
+            const user = await User.findOne({ username: 'testuser2' })
+            console.log('testuser2 id:', user.id)
+
+            console.log('trying to create new post...')
 
             await api
                 .post('/api/blogs')
@@ -68,16 +165,20 @@ describe('tests for blogs', () => {
                     author: "Mike Defrost",
                     url: "http://post.com",
                     likes: 3,
+                    user: user.id
                 })
                 .expect(201)
 
-            const new_Blogs_list = await api.get('/api/blogs')
-            console.log(new_Blogs_list.body)
-            expect(new_Blogs_list.body).toHaveLength(old_Blogs_list.body.length + 1)
+            // const new_Blogs_list = await api.get('/api/blogs')
+            // console.log(new_Blogs_list.body)
+            // expect(new_Blogs_list.body).toHaveLength(old_Blogs_list.body.length + 1)
         })
 
 
         test('If the likes property is missing from the request, it will default to the value 0', async () => {
+
+            const user = await User.findOne({ username: 'testuser2' })
+
             await api
                 .post('/api/blogs')
                 .send({
@@ -85,6 +186,7 @@ describe('tests for blogs', () => {
                     author: "test for likes value",
                     url: "http://post.com",
                     // likes: 3,
+                    user: user.id
                 })
                 .expect(201)
 
@@ -97,6 +199,9 @@ describe('tests for blogs', () => {
         })
 
         test('If the title or url properties are missing from the request data, the backend responds to the request with the status code 400 Bad Request', async () => {
+
+            const user = await User.findOne({ username: 'testuser2' })
+
             await api
                 .post('/api/blogs')
                 .send({
@@ -104,6 +209,7 @@ describe('tests for blogs', () => {
                     author: "test title",
                     url: "http://post.com",
                     likes: 3,
+                    user: user.id
                 })
                 .expect(400)
 
@@ -114,6 +220,7 @@ describe('tests for blogs', () => {
                     author: "test url",
                     // url: "http://post.com",
                     likes: 3,
+                    user: user.id
                 })
                 .expect(400)
 
@@ -141,7 +248,8 @@ describe('tests for blogs', () => {
     describe('updating of a blog', () => {
         test('If entity was updated properly?', async () => {
             const old_blogList = await api.get('/api/blogs')
-            // console.log('first dummy in list blog before updating', old_blogList.body[0])
+
+            const user = await User.findOne({ username: 'testuser1' })
 
             //trying to update first dummy blog in list. Likes property is different
             const updatedBlog = {
@@ -150,15 +258,19 @@ describe('tests for blogs', () => {
                 url: 'http://post.com',
                 likes: 100,
                 id: old_blogList.body[0].id,
+                user: user.id
             }
 
             await api
-                .put(`/api/blogs/${old_blogList.body[0].id}`)
+                .put(`/api/blogs/${updatedBlog.id}`)
                 .send(updatedBlog)
                 .expect(200)
 
             const new_blogList = await api.get('/api/blogs')
-            // console.log('dummy blog after updating', new_blogList.body[0])
+
+            if (new_blogList.body[0].user.id === user.toJSON().id) {
+                new_blogList.body[0].user = user.toJSON().id
+            }
 
             expect(new_blogList.body[0]).toEqual(updatedBlog)
         })

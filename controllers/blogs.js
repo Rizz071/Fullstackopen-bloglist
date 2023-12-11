@@ -17,18 +17,25 @@ blogsRouter.get('/', async (request, response) => {
 
 blogsRouter.post('/', async (request, response) => {
     if (!request.body.likes) request.body.likes = 0
-    if (!request.body.title) response.status(400).end()
-    if (!request.body.url) response.status(400).end()
+
+    if (!request.body.title) {
+        response.status(400).end()
+    } else if (!request.body.url) {
+        response.status(400).end()
+    } else {
 
 
-    const user = await User.findById(request.body.userId)
-    const blog = new Blog(request.body)
+        const blog = new Blog(request.body)
+        const user = await User.findById(request.body.user)
+        console.log('blog arrived by POST:', blog)
+        console.log('Extracted USER:', user)
 
-    const savedBlog = await blog.save()
-    user.notes = user.blogs.concat(savedBlog._id)
-    await user.save()
+        const savedBlog = await blog.save()
+        user.blogs = user.blogs.concat(savedBlog._id)
+        const savedUser = await user.save()
 
-    response.status(201).json(savedBlog)
+        response.status(201).json(savedBlog)
+    }
 })
 
 blogsRouter.delete('/:id', async (request, response) => {
