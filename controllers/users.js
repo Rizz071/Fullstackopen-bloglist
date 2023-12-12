@@ -12,10 +12,17 @@ usersRouter.get('/', async (request, response) => {
 usersRouter.post('/', async (request, response) => {
     // const { username, name, password } = request.body
 
-    if (request.body.password.length < 3) {
-        response.status(401).end()
+    // console.log("username", request.body.username)
+    // console.log("password", request.body.password)
+
+    if (!request.body.username) {
+        response.status(400).send("Current username does not match").end()
+    } else if (!request.body.password) {
+        response.status(401).send("Current password does not match").end()
+    } else if (request.body.password.length < 3) {
+        response.status(401).send("Current password is shorter then 3 symbols").end()
     } else if (request.body.username.length < 3) {
-        response.status(400).end()
+        response.status(400).send("Current username is shorter then 3 symbols").end()
     } else {
 
         const saltRounds = 10

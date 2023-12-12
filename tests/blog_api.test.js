@@ -42,11 +42,12 @@ const initialBlogs = [
 
 
 beforeEach(async () => {
+    // Deleting all dummy user entities
     await User.deleteMany({})
 
     const saltRounds = 10
 
-    // console.log('Creating dummy user entities...')
+    // Creating dummy user entities
     for (let dummyUser of initialUsers) {
         let userObject = new User(dummyUser)
         userObject.passwordHash = await bcrypt.hash(dummyUser.password, saltRounds)
@@ -58,7 +59,7 @@ beforeEach(async () => {
     // console.log('Created dummy users:', createdUsers.body)
 
 
-    // console.log('Deleting all dummy blog entities...')
+    // Deleting all dummy blog entities
     await Blog.deleteMany({})
 
     const user = await User.findOne({ username: 'testuser1' })
@@ -82,7 +83,7 @@ describe('tests for users', () => {
 
             const old_Users_list = await api.get('/api/users')
 
-            await api
+            const sentUser = await api
                 .post('/api/users')
                 .send({
                     "username": "testuser3",
@@ -90,10 +91,14 @@ describe('tests for users', () => {
                     "password": "salasana3"
                 })
                 .expect(201)
+                .expect('Content-Type', /application\/json/)
+
+            console.log('sentUser id', sentUser.body)
 
             const new_Users_list = await api.get('/api/users')
-            console.log(new_Users_list.body)
+            console.log('new_Users_list.body', new_Users_list.body)
             expect(new_Users_list.body).toHaveLength(old_Users_list.body.length + 1)
+            expect(new_Users_list.body[2].id).toBe(sentUser.body.id)
         })
 
         test('test for too short username', async () => {
@@ -125,6 +130,50 @@ describe('tests for users', () => {
             const new_Users_list = await api.get('/api/users')
             expect(new_Users_list.body).not.toContain(sentUser)
         })
+
+        test('login with empty username -> 401', async () => {
+            const sentUser = await api
+                .post('/api/users')
+                .send({
+                    "username": "",
+                    "name": "Esi Merkki",
+                    "password": "salasana"
+                })
+                .expect(400)
+        })
+
+        test('login with empty password -> 401', async () => {
+            const sentUser = await api
+                .post('/api/users')
+                .send({
+                    "username": "Jonny",
+                    "name": "Esi Merkki",
+                    "password": ""
+                })
+                .expect(401)
+        })
+
+        test('login with undefined username-> 400', async () => {
+            const sentUser = await api
+                .post('/api/users')
+                .send({
+                    "username": undefined,
+                    "name": "Esi Merkki",
+                    "password": "salasana"
+                })
+                .expect(400)
+        })
+
+        test('login with undefined password-> 401', async () => {
+            const sentUser = await api
+                .post('/api/users')
+                .send({
+                    "username": "Jonny",
+                    "name": "Esi Merkki",
+                    "password": undefined
+                })
+                .expect(401)
+        })
     })
 
 })
@@ -153,12 +202,12 @@ describe('tests for blogs', () => {
         test('test for POST', async () => {
 
             const old_Blogs_list = await api.get('/api/blogs')
+
             const user = await User.findOne({ username: 'testuser2' })
             console.log('testuser2 id:', user.id)
 
             console.log('trying to create new post...')
-
-            await api
+            const sentBlog = await api
                 .post('/api/blogs')
                 .send({
                     title: "test for post request 3",
@@ -168,10 +217,12 @@ describe('tests for blogs', () => {
                     user: user.id
                 })
                 .expect(201)
+                .expect('Content-Type', /application\/json/)
 
-            // const new_Blogs_list = await api.get('/api/blogs')
-            // console.log(new_Blogs_list.body)
-            // expect(new_Blogs_list.body).toHaveLength(old_Blogs_list.body.length + 1)
+            const new_Blogs_list = await api.get('/api/blogs')
+
+            expect(new_Blogs_list.body).toHaveLength(old_Blogs_list.body.length + 1)
+            expect(new_Blogs_list.body[2].id).toBe(sentBlog.body.id)
         })
 
 
@@ -276,9 +327,9 @@ describe('tests for blogs', () => {
         })
     })
 
-    afterAll(async () => {
-        await mongoose.connection.close()
-        console.log('Connection to MongoDB closed')
-    })
+})
 
+afterAll(async () => {
+    await mongoose.connection.close()
+    console.log('Connection to MongoDB closed')
 })

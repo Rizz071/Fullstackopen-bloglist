@@ -11,7 +11,7 @@ blogsRouter.get('/', async (request, response) => {
     if (blogs) {
         response.json(blogs)
     } else {
-        response.status(404).end()
+        response.status(404).send("Not found!").end()
     }
 })
 
@@ -19,9 +19,9 @@ blogsRouter.post('/', async (request, response) => {
     if (!request.body.likes) request.body.likes = 0
 
     if (!request.body.title) {
-        response.status(400).end()
+        response.status(400).send("Title is empty!").end()
     } else if (!request.body.url) {
-        response.status(400).end()
+        response.status(400).send("URL is empty!").end()
     } else {
 
 
