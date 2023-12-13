@@ -1,8 +1,9 @@
 POST http://127.0.0.1:3003/api/blogs
 Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyMzAiLCJpZCI6IjY1Nzk5YTkwZWYwZTY0NDFiYjM3NDhlYiIsImlhdCI6MTcwMjQ2ODk1OX0.EF3xTVL-DR5TEOsiRZfueZ7zce2ix4__OULr76JQVOE
 
 {
-    "title": "Sample Blog 10",
+    "title": "Sample Blog 114",
     "author": "John Doe",
     "url": "http://some.address.com",
     "likes": 15

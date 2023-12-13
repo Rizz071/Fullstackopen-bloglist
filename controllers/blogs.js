@@ -9,9 +9,9 @@ blogsRouter.get('/', async (request, response) => {
         .populate('user', { username: 1, name: 1 })
 
     if (blogs) {
-        response.json(blogs)
+        return response.json(blogs)
     } else {
-        response.status(404).send("Not found!").end()
+        return response.status(404).json({ error: "Not found!" })
     }
 })
 
@@ -19,22 +19,26 @@ blogsRouter.post('/', async (request, response) => {
     if (!request.body.likes) request.body.likes = 0
 
     if (!request.body.title) {
-        response.status(400).send("Title is empty!").end()
+        return response.status(400).json({ error: "Title is empty!" })
     } else if (!request.body.url) {
-        response.status(400).send("URL is empty!").end()
+        return response.status(400).json({ error: "URL is empty!" })
+    } else if (request.token === undefined) {
+        return response.status(401).json({ error: "Token absent or invalid" })
     } else {
 
+        console.log('Received decodedToken from middleware', request.token)
+
+        const user = await User.findById(request.token.id)
+        console.log('Extracted USER:', user)
 
         const blog = new Blog(request.body)
-        const user = await User.findById(request.body.user)
-        console.log('blog arrived by POST:', blog)
-        console.log('Extracted USER:', user)
+        console.log('Blog arrived by POST:', blog)
 
         const savedBlog = await blog.save()
         user.blogs = user.blogs.concat(savedBlog._id)
         const savedUser = await user.save()
 
-        response.status(201).json(savedBlog)
+        return response.status(201).json(savedBlog)
     }
 })
 

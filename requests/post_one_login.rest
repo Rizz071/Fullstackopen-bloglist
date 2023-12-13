@@ -1,8 +1,7 @@
-POST http://127.0.0.1:3003/api/users
+POST http://127.0.0.1:3003/api/login
 Content-Type: application/json
 
 {
     "username": "testuser30",
-    "name": "Esi Merkki",
     "password": "salasana"
 }
