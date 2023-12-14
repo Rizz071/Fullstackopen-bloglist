@@ -10,6 +10,8 @@ const usersRouter = require('../controllers/users')
 const api = supertest(app)
 
 
+let loggedUser = undefined
+
 const initialUsers = [
     {
         "username": "testuser1",
@@ -81,7 +83,8 @@ describe('tests for users', () => {
 
         test('test for POST', async () => {
 
-            const old_Users_list = await api.get('/api/users')
+            const old_Users_list = await api
+                .get('/api/users')
 
             const sentUser = await api
                 .post('/api/users')
@@ -131,7 +134,7 @@ describe('tests for users', () => {
             expect(new_Users_list.body).not.toContain(sentUser)
         })
 
-        test('login with empty username -> 401', async () => {
+        test('creating new user with empty username -> 401', async () => {
             const sentUser = await api
                 .post('/api/users')
                 .send({
@@ -142,7 +145,7 @@ describe('tests for users', () => {
                 .expect(400)
         })
 
-        test('login with empty password -> 401', async () => {
+        test('creating new user with empty password -> 401', async () => {
             const sentUser = await api
                 .post('/api/users')
                 .send({
@@ -153,7 +156,7 @@ describe('tests for users', () => {
                 .expect(401)
         })
 
-        test('login with undefined username-> 400', async () => {
+        test('creating new user with undefined username-> 400', async () => {
             const sentUser = await api
                 .post('/api/users')
                 .send({
@@ -164,7 +167,7 @@ describe('tests for users', () => {
                 .expect(400)
         })
 
-        test('login with undefined password-> 401', async () => {
+        test('creating new user with undefined password-> 401', async () => {
             const sentUser = await api
                 .post('/api/users')
                 .send({
@@ -178,6 +181,33 @@ describe('tests for users', () => {
 
 })
 
+
+describe('tests for authorization', () => {
+
+    test('login without token', async () => {
+        await api
+            .post('/api/login')
+            .send({
+                "username": "testuser30",
+                "password": "salasana"
+            })
+            .expect(401)
+    })
+
+
+    test('test for authorization of testuser2', async () => {
+        console.log('logging in to post new blog')
+        loggedUser = await api
+            .post('/api/login')
+            .set('Authorization', 'salasana2')
+            .send({
+                username: `testuser2`,
+                password: `salasana2`
+            })
+            .expect(200)
+        console.log('loggenUser.body: ', loggedUser.body)
+    })
+})
 
 describe('tests for blogs', () => {
     test('blogs are returned as json', async () => {
@@ -203,18 +233,19 @@ describe('tests for blogs', () => {
 
             const old_Blogs_list = await api.get('/api/blogs')
 
-            const user = await User.findOne({ username: 'testuser2' })
-            console.log('testuser2 id:', user.id)
+            const user = await User.findOne({ username: `${loggedUser.body.username}` })
+            // console.log('testuser2 id:', user.id)
 
             console.log('trying to create new post...')
             const sentBlog = await api
                 .post('/api/blogs')
+                .set('Authorization', `Bearer ${loggedUser.body.token}`)
                 .send({
                     title: "test for post request 3",
                     author: "Mike Defrost",
                     url: "http://post.com",
                     likes: 3,
-                    user: user.id
+                    user: user.id,
                 })
                 .expect(201)
                 .expect('Content-Type', /application\/json/)
@@ -228,10 +259,11 @@ describe('tests for blogs', () => {
 
         test('If the likes property is missing from the request, it will default to the value 0', async () => {
 
-            const user = await User.findOne({ username: 'testuser2' })
+            const user = await User.findOne({ username: `${loggedUser.body.username}` })
 
             await api
                 .post('/api/blogs')
+                .set('Authorization', `Bearer ${loggedUser.body.token}`)
                 .send({
                     title: "test for post request 4",
                     author: "test for likes value",
@@ -251,10 +283,11 @@ describe('tests for blogs', () => {
 
         test('If the title or url properties are missing from the request data, the backend responds to the request with the status code 400 Bad Request', async () => {
 
-            const user = await User.findOne({ username: 'testuser2' })
+            const user = await User.findOne({ username: `${loggedUser.body.username}` })
 
             await api
                 .post('/api/blogs')
+                .set('Authorization', `Bearer ${loggedUser.body.token}`)
                 .send({
                     // title: "test for post request 5",
                     author: "test title",
@@ -266,6 +299,7 @@ describe('tests for blogs', () => {
 
             await api
                 .post('/api/blogs')
+                .set('Authorization', `Bearer ${loggedUser.body.token}`)
                 .send({
                     title: "test for post request 5",
                     author: "test url",
@@ -300,30 +334,31 @@ describe('tests for blogs', () => {
         test('If entity was updated properly?', async () => {
             const old_blogList = await api.get('/api/blogs')
 
-            const user = await User.findOne({ username: 'testuser1' })
+            const user = await User.findOne({ username: `${loggedUser.body.username}` })
 
             //trying to update first dummy blog in list. Likes property is different
             const updatedBlog = {
-                title: 'test for post request 0',
-                author: 'John Post',
-                url: 'http://post.com',
+                title: "test for post request 1",
+                author: "Dave Repost",
+                url: "http://post.com",
                 likes: 100,
-                id: old_blogList.body[0].id,
+                id: old_blogList.body[1].id,
                 user: user.id
             }
 
             await api
                 .put(`/api/blogs/${updatedBlog.id}`)
+                .set('Authorization', `Bearer ${loggedUser.body.token}`)
                 .send(updatedBlog)
                 .expect(200)
 
             const new_blogList = await api.get('/api/blogs')
 
-            if (new_blogList.body[0].user.id === user.toJSON().id) {
-                new_blogList.body[0].user = user.toJSON().id
+            if (new_blogList.body[1].user.id === user.toJSON().id) {
+                new_blogList.body[1].user = user.toJSON().id
             }
 
-            expect(new_blogList.body[0]).toEqual(updatedBlog)
+            expect(new_blogList.body[1]).toEqual(updatedBlog)
         })
     })
 

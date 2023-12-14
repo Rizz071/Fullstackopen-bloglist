@@ -28,7 +28,7 @@ blogsRouter.post('/', async (request, response) => {
 
         console.log('Received decodedToken from middleware', request.token)
 
-        const user = await User.findById(request.token.id)
+        const user = await User.findOne({ username: request.token.username })
         console.log('Extracted USER:', user)
 
         const blog = new Blog(request.body)
