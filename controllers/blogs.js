@@ -38,6 +38,8 @@ blogsRouter.post('/', async (request, response) => {
         const blog = new Blog(request.body)
         console.log('Blog arrived by POST:', blog)
 
+        blog.user = user.id
+
         const savedBlog = await blog.save()
         user.blogs = user.blogs.concat(savedBlog._id)
         const savedUser = await user.save()
