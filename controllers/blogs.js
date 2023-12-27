@@ -4,9 +4,6 @@ const User = require('../models/user')
 
 
 blogsRouter.get('/', async (request, response) => {
-    // if (request.token === undefined) {
-    //     return response.status(401).json({ error: "Token absent or invalid" })
-    // }
 
     const blogs = await Blog
         .find({})
