@@ -19,7 +19,7 @@ commentsRouter.get('/:blogId', async (request, response) => {
         return comment.blog.id === request.params.blogId
     })
 
-    console.log('Founded comments by blog id: ', foundedComments)
+    // console.log('Founded comments by blog id: ', foundedComments)
 
 
     if (foundedComments) {
@@ -52,7 +52,7 @@ commentsRouter.post('/:blogId', async (request, response) => {
         const user = await User.findOne({ username: request.token.username })
 
         comment.user = user
-        console.log(user)
+        // console.log(user)
         // comment.user.id = user.id
 
         const savedComment = await comment.save()
