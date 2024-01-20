@@ -10,10 +10,6 @@ usersRouter.get('/', async (request, response) => {
 
 
 usersRouter.post('/', async (request, response) => {
-    // const { username, name, password } = request.body
-
-    // console.log("username", request.body.username)
-    // console.log("password", request.body.password)
 
     if (!request.body.username) {
         response.status(400).send("Current username does not match").end()

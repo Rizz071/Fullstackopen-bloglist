@@ -4,6 +4,9 @@ const User = require('../models/user')
 
 
 blogsRouter.get('/', async (request, response) => {
+    if (request.token === undefined) {
+        return response.status(401).json({ error: "Token absent or invalid" })
+    }
 
     const blogs = await Blog
         .find({})
@@ -18,6 +21,7 @@ blogsRouter.get('/', async (request, response) => {
 
 blogsRouter.post('/', async (request, response) => {
     if (!request.body.likes) request.body.likes = 0
+    request.body.comments = []
 
     if (!request.body.title) {
         return response.status(400).json({ error: "Title is empty!" })
